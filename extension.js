@@ -125,7 +125,10 @@ function activate(context) {
                 snippetObject.description = description;
             }).then(() => {
                 var vsCodeUserSettingsPath;
-                const osName = os.type();
+                const release = os.release().toLowerCase();
+                const hasWSL =  release.includes('microsoft') || release.includes('wsl');
+                const osName =  hasWSL ? 'wsl' :  os.type();
+                
                 var delimiter = "/";
                 switch (osName) {
                     case ("Darwin"): {
@@ -134,6 +137,14 @@ function activate(context) {
                     }
                     case ("Linux"): {
                         vsCodeUserSettingsPath = process.env.HOME + "/.config/Code/User/";
+                        break;
+                    }
+                    case ("wsl"):{
+                        const index = process.env.VSCODE_CWD.indexOf("/AppData");
+                        if (index !== -1) {
+                            // 截取从开始到 "/AppData" 的部分
+                            vsCodeUserSettingsPath = process.env.VSCODE_CWD.substring(0, index + "/AppData".length)+'/Roaming/Code/User/';
+                        } 
                         break;
                     }
                     case ("Windows_NT"): {
@@ -147,9 +158,10 @@ function activate(context) {
                         break;
                     }
                 }
-
+            
                 var userSnippetsFile = vsCodeUserSettingsPath + util.format("snippets%s.json", delimiter + snippetObject.language);
-
+                console.log(userSnippetsFile);
+                
                 fs.readFile(userSnippetsFile, (err, text) => {
                     if (err) {
                         fs.open(userSnippetsFile, "w+", (err, fd) => {

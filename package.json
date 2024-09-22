@@ -5,7 +5,7 @@
     "version": "0.0.5",
     "publisher": "nikitaKunevich",
     "engines": {
-        "vscode": "^1.5.0"
+        "vscode": "^1.93.0"
     },
     "icon": "icon.png",
     "repository": {
@@ -24,7 +24,7 @@
         "commands": [
             {
                 "command": "extension.createSnippet",
-                "title": "Create Snippet"
+                "title": "Create Snippet test"
             }
         ]
     },
