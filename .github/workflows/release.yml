@@ -1,0 +1,38 @@
+name: Release VSCode Extension
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 设置 Node.js 环境
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      # 安装依赖
+      - name: Install dependencies
+        run: npm install
+
+      # 打包 VSCode 扩展
+      - name: Package extension
+        run: vsce package
+
+      # 发布到 VSCode Marketplace
+      - name: Publish to Visual Studio Code Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}  # 使用 GitHub Secrets 中的 VSCE_TOKEN
+        run: |
+          vsce publish
