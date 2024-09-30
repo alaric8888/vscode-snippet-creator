@@ -1,34 +1,61 @@
-name: Release
+name: Release VSCode Extension
 
-permissions:
-  contents: write
-
+# 设置触发条件：手动触发或推送 tag 时发布
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
   push:
+    branches: ['main']
     tags:
-      - 'v*'  
+      - 'v*'  # 触发条件为推送 v* 的标签
 
 jobs:
   release:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      # Step 1: 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-      # - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+          fetch-depth: 0  # 获取所有历史记录和标签
+
+      # Step 2: 设置 Node.js 环境
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: lts/*
-          registry-url: https://registry.npmjs.org/
-      - run: npm install
-      # - run: npx changelogithub
+          node-version: 'lts/*'  # 使用 LTS 版本
+
+      # Step 3: 设置 pnpm (可选，如果你的项目使用的是 npm 或 yarn，可以跳过)
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8.x  # 安装 pnpm 版本
+
+      # Step 4: 安装依赖，包括 vsce 工具
+      - name: Install dependencies
+        run: |
+          pnpm install
+          pnpm add -g @vscode/vsce  # 安装 vsce 发布工具
+
+      # Step 5: 构建 VSCode 扩展
+      - name: Build extension
+        run: pnpm run build  # 根据你的项目配置，替换成正确的构建命令
+      # Step 6: 检查构建输出
+      - name: Check output
+        run: |
+            ls dist  # 确保构建文件存在
+      - name: build vsce
+        run: |
+          pnpm exec vsce package  # 打包扩展为 .vsix 文件
+        # Step 7: 使用 vsce 发布到 Visual Studio Code Marketplace    
+      - name: "Publish to Visual Studio Code Marketplace"
+        run: pnpm exec vsce publish -p ${{ secrets.VSCE_PAT }} --no-dependencies  # 发布到 Marketplace
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - run: npm run build
-      - run: cd dist && npx vsce publish -p ${{secrets.VSCE_PAT}} --no-dependencies
-        env:
-          VSCE_TOKEN: ${{secrets.VSCE_PAT}}
-      # - run: cd dist && npx ovsx publish -p ${{secrets.VSCE_PAT}} --no-dependencies
-      #   env:
-      #     OVSX_TOKEN: ${{secrets.VSCE_PAT}}
+          VSCE_TOKEN: ${{ secrets.VSCE_PAT }}
+      # Step 8: （可选）发布到 OpenVSX
+    #   - name: Publish to OpenVSX (optional)
+    #     if: ${{ secrets.OVSX_TOKEN != '' }}  # 如果存在 OVSX_TOKEN 则发布
+    #     run: |
+    #       pnpm exec ovsx publish -p ${{ secrets.OVSX_TOKEN }} --no-dependencies
+    #     env:
+    #       OVSX_TOKEN: ${{ secrets.OVSX_TOKEN }}
