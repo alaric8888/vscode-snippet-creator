@@ -16,16 +16,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
+      # - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
           registry-url: https://registry.npmjs.org/
-      - run: pnpm install
-      - run: npx changelogithub
+      - run: npm install
+      # - run: npx changelogithub
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - run: pnpm run build
+      - run: npm run build
       - run: cd dist && npx vsce publish -p ${{secrets.VSCE_PAT}} --no-dependencies
         env:
           VSCE_TOKEN: ${{secrets.VSCE_PAT}}
